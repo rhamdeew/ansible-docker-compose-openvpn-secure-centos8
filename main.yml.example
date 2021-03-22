@@ -1,0 +1,4 @@
+username: web
+uid: 1050
+security_ssh_port: 2222
+variable_host: web

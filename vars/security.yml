@@ -1,0 +1,5 @@
+security_ssh_password_authentication: "no"
+security_ssh_permit_root_login: "yes"
+security_ssh_usedns: "no"
+security_fail2ban_enabled: true
+security_autoupdate_enabled: false

@@ -1,0 +1,77 @@
+- hosts: "{{ variable_host }}"
+
+  vars:
+    pip_package: python3-pip
+    pip_executable: pip3
+    pip_install_packages:
+      - name: docker
+    authorized_keys_file_path: ./files/authorized_keys
+
+  vars_files:
+    - main.yml
+    - vars/security.yml
+
+  pre_tasks:
+    - name: Install yum epel-release
+      yum:
+        name: ['epel-release']
+    - name: Install yum package
+      yum:
+        name: ['python3-libselinux', 'curl', 'git', 'vim', 'python3-policycoreutils', 'firewalld', 'tmux', 'make']
+    - name: Disable SElinux
+      selinux:
+        state: disabled
+    - name: set timezone to Europe/Moscow
+      timezone:
+        name: Europe/Moscow
+    - name: Open custom SSH port
+      ansible.posix.firewalld:
+        port: '{{ security_ssh_port }}/tcp'
+        permanent: yes
+        zone: public
+        state: enabled
+    - name: Reboot
+      reboot:
+        reboot_timeout: '60'
+
+  tasks:
+    - name: Create {{ username }} user
+      user:
+        name: '{{ username }}'
+        generate_ssh_key: yes
+        ssh_key_bits: 2048
+        ssh_key_file: .ssh/id_rsa
+        shell: /bin/bash
+        uid: '{{ uid }}'
+        home: /srv/{{ username }}
+        groups: docker
+
+    - name: Check file {{ authorized_keys_file_path }} exists
+      local_action: stat path={{ authorized_keys_file_path }}
+      register: authorized_keys_file
+
+    - name: Copy authorized_keys for {{ username }}
+      copy:
+        src: '{{ authorized_keys_file_path }}'
+        dest: /srv/{{ username }}/.ssh/authorized_keys
+        owner: '{{ username }}'
+        group: '{{ username }}'
+        mode: 0600
+      when: authorized_keys_file.stat.exists
+
+    - git:
+        repo: https://github.com/rhamdeew/docker-compose-openvpn
+        dest: /srv/{{ username }}/docker-compose-openvpn
+      become_user: '{{ username }}'
+
+    - file:
+        path: /srv/{{ username }}
+        owner: '{{ username }}'
+        group: '{{ username }}'
+        recurse: yes
+
+  roles:
+    - geerlingguy.repo-epel
+    - geerlingguy.security
+    - geerlingguy.pip
+    - geerlingguy.docker
