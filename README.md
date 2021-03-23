@@ -1,5 +1,11 @@
 ## Ansible Playbook for starting OpenVPN server on CentOS 8
 
+### Screencast on YouTube
+
+You can see this playbook in action (from 1:06 to 4:05).
+
+[![](http://i3.ytimg.com/vi/KApzBc6V6HY/maxresdefault.jpg)](http://www.youtube.com/watch?v=KApzBc6V6HY "")
+
 ### Software will be installed:
 
 - python 3
